@@ -44,5 +44,8 @@
     <ClCompile Include="MMHeap_TODO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MMHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

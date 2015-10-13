@@ -1,15 +1,14 @@
 #ifndef _PAK_FILE_H_
 #define _PAK_FILE_H_
 
+
 // simple pak file format based on quake implementation
 
-namespace EDUtilities
-{
+namespace EDUtilities {
 	// signature - must be 'PACK' to signify its a valid pak file
 	// offset - the absolute position in bytes of the directory
 	// length - the size in bytes of all the file headers
-	struct MainHeaderPak
-	{
+	struct MainHeaderPak {
 		char signature[4];
 		int  directory_offset;
 		int	 directory_length;
@@ -18,15 +17,13 @@ namespace EDUtilities
 	// filename - relative path of file
 	// offset - the absolute position in bytes of the file
 	// length - the size in bytes of the file
-	struct FileHeaderPak
-	{
+	struct FileHeaderPak {
 		char filename[56];
 		int	 file_offset;
 		int	 file_length;
 	};
 
-	class PakFile
-	{
+	class PakFile {
 	private:
 
 		//static PakFile* instance;

@@ -2,7 +2,7 @@
   
   <!-- change level for your class, Levels/ed1_level.xml, Levels/ed2_level.xml, Levels/ed3_level.xml -->
   
-  <Level>Levels/ed2_Level.xml</Level>
+  <Level>Levels/ed1_Level.xml</Level>
   <Width>1280</Width>
   <Height>720</Height>
   <UsePakTextures>false</UsePakTextures>

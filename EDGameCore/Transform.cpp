@@ -153,14 +153,22 @@ namespace EDGameCore
 	void Transform::TranslateLocal(const Float3& translation)
 	{
 		// TODO - comment this out and write your own solution
-		TranslateLocalSolution(translation);
+		//TranslateLocalSolution(translation);
+		localMatrix.WAxis += localMatrix.XAxis * translation.x;
+		localMatrix.WAxis += localMatrix.YAxis * translation.y;
+		localMatrix.WAxis += localMatrix.ZAxis * translation.z;
+
 		DirtyTransform();
 	}
 
 	void Transform::TranslateGlobal(const Float3& translation)
 	{
 		// TODO - comment this out and write your own solution
-		TranslateGlobalSolution(translation);
+		//TranslateGlobalSolution(translation);
+		worldMatrix.Wx += translation.x;
+		worldMatrix.Wy += translation.y;
+		worldMatrix.Wz += translation.z;
+
 		DirtyTransform();
 	}
 

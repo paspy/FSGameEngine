@@ -1,7 +1,9 @@
 import math
 
 traveled = 0
+upDown = 0
 xspeed = 0
+yspeed = 0
 zspeed = 0
 dist_max = 25
 state = 0
@@ -9,15 +11,19 @@ speed_max = 0.05
 
 def borg_behavior():
     sin_move()
-    #square_move()
+    square_move()
 
 def sin_move():
     global xspeed
+    global yspeed
     global zspeed
     global traveled
-    zspeed = math.sin(traveled) * 0.1
-    xspeed = math.cos(traveled) * 0.1
-    traveled += 0.01
+    global upDown
+    xspeed = math.sin(traveled) * 0.25
+    yspeed = math.sin(traveled) * 0.1
+    zspeed = math.cos(traveled) * 0.25
+    traveled += 0.1
+
 
 def square_move():
     global xspeed

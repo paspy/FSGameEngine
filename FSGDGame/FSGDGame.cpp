@@ -14,6 +14,7 @@
 #include "../EDUtilities/PrintConsole.h"
 #include "../EDThreadPool/ThreadPool.h"
 #include "../EDThreadPool/WorkerExample.h"
+#include "../EDThreadPool/MyWorker.h"
 #include "../EDUtilities/PakFile.h"
 #include "../EDMemoryManager/MemoryManager.h"
 #include "../EDUtilities/Settings.h"
@@ -93,6 +94,14 @@ void PoolTaskExample(unsigned int _eventId, const void* _eventData, void* _liste
 	if (_eventData != nullptr)
 	{
 		WorkerExample* worker = new WorkerExample(wcstol((wchar_t*)_eventData, '\0', 10));
+		ThreadPool::GetInstance()->PostWork(worker);
+		ThreadPool::GetInstance()->testObjects.push_back(worker);
+	}
+}
+
+void PoolTaskX(unsigned int _eventId, const void* _eventData, void* _listener) {
+	if ( _eventData != nullptr ) {
+		MyWorker* worker = new MyWorker(wcstol((wchar_t*)_eventData, '\0', 10));
 		ThreadPool::GetInstance()->PostWork(worker);
 		ThreadPool::GetInstance()->testObjects.push_back(worker);
 	}
@@ -241,6 +250,7 @@ void Game::Initialize(void)
 
 	InputConsole::GetReference().RegisterCommand(L"LoadScene", 0, LoadSceneFromLevel);
 	InputConsole::GetReference().RegisterCommand(L"PoolTask", 0, PoolTaskExample);
+	InputConsole::GetReference().RegisterCommand(L"PoolTaskX", 0, PoolTaskX);
 	InputConsole::GetReference().RegisterCommand(L"ExtractAsset", 0, ExtractAsset);
 	InputConsole::GetReference().RegisterCommand(L"CoreDump", 0, CoreDump);
 	InputConsole::GetReference().RegisterCommand(L"MetricDump", 0, MemMetricDump);

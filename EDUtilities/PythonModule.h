@@ -15,10 +15,8 @@
 
 using namespace std;
 
-namespace EDUtilities
-{
-	class PythonModule
-	{
+namespace EDUtilities {
+	class PythonModule {
 	private:
 		PyObject* module;
 		PyObject* dictionary;
@@ -27,7 +25,7 @@ namespace EDUtilities
 	public:
 
 		bool IsValid() { return module != nullptr; }
-		string GetModuleName() { return module_name;  }
+		string GetModuleName() { return module_name; }
 
 		// inializing Python interpeter is trivial, didn't want to create an extra manager to do so
 		static void Initialize();
@@ -52,7 +50,7 @@ namespace EDUtilities
 		// cleans up any existing python objects 
 		void UnloadModule();
 		void UnloadModuleSolution();
-		
+
 		// look up and call python function by name
 		// INPUT _name - name of function to call
 		void CallFunction(string _name);
@@ -62,7 +60,7 @@ namespace EDUtilities
 		// lazyness permitting try to use string("") over ""
 		// INPUT _name - name of global variable to set
 		// INPUT _value - what to set the python value to
-		void SetValue(string _name, int _value);		
+		void SetValue(string _name, int _value);
 		void SetValue(string _name, float _value);
 		void SetValue(string _name, string _value);
 		void SetValue(string _name, bool _value);

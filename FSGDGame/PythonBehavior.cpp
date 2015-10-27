@@ -34,6 +34,7 @@ void PythonBehavior::LateUpdate()
 	Transform* target_transform = nullptr;
 	Float4x4 mat = looker_transform->GetLocalMatrix();
 	float xspeed = 0.0f;
+	float yspeed = 0.0f;
 	float zspeed = 0.0f;
 
 	// Finds the target based on its instance id each update 
@@ -44,10 +45,11 @@ void PythonBehavior::LateUpdate()
 	{
 		module.CallFunction(string("borg_behavior"));
 		module.GetValue(string("xspeed"), xspeed);
+		module.GetValue(string("yspeed"), yspeed);
 		module.GetValue(string("zspeed"), zspeed);
 	}
 
-	mat.translateLocal(Float3(xspeed, 0.0, zspeed));
+	mat.translateLocal(Float3(xspeed, yspeed, zspeed));
 	looker_transform->SetLocalMatrix(mat);
 }
 

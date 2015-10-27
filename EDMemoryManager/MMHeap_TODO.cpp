@@ -9,7 +9,7 @@ namespace EDMemoryManager {
 	
 
 	Header * Heap::FindBlock(unsigned int allocSize) {
-		//return FindBlockSolution(allocSize);
+		return FindBlockSolution(allocSize);
 
 		Header *cursor = freeListEntry;
 
@@ -28,21 +28,21 @@ namespace EDMemoryManager {
 		InitializeCriticalSection(&criticalSection);
 		MM_HEAP_LOCK;
 		// TODO - comment out the solution version and write your own, you can ignore the synchronization code
-		//InitSolution(poolSize, _synchronize);
+		InitSolution(poolSize, _synchronize);
 
 		//Allocated memory for this entire heap
-		pool = static_cast<char*>(malloc(poolSize));
-		memset(pool, NULL, poolSize);
+		//pool = static_cast<char*>(malloc(poolSize));
+		//memset(pool, NULL, poolSize);
 
-		firstHeader = reinterpret_cast<Header*>(pool);
-		firstHeader->next = firstHeader->prev = firstHeader;
-		firstHeader->size = poolSize - (sizeof(Header) + sizeof(Footer));
+		//firstHeader = reinterpret_cast<Header*>(pool);
+		//firstHeader->next = firstHeader->prev = firstHeader;
+		//firstHeader->size = poolSize - (sizeof(Header) + sizeof(Footer));
 
-		lastFooter = reinterpret_cast<Footer*>(&pool[poolSize - sizeof(Footer)]);
-		lastFooter->size = firstHeader->size;
+		//lastFooter = reinterpret_cast<Footer*>(&pool[poolSize - sizeof(Footer)]);
+		//lastFooter->size = firstHeader->size;
 
-		freeListEntry = firstHeader;
-		poolSizeTotal = poolSize;
+		//freeListEntry = firstHeader;
+		//poolSizeTotal = poolSize;
 
 		MM_HEAP_UNLOCK;
 	}
@@ -56,66 +56,114 @@ namespace EDMemoryManager {
 		Footer* used_foot = nullptr;
 		void* data = nullptr;
 
-		if ( free_head != nullptr ) {
-			// Split
-			if ( free_head->size > allocSize + sizeof(Header) + sizeof(Footer) + 1) {
-				free_head->size -= allocSize + sizeof(Header) + sizeof(Footer);
+		//if ( free_head != nullptr ) {
+		//	// Split
+		//	if ( free_head->size > allocSize + sizeof(Header) + sizeof(Footer) + 1) {
+		//		free_head->size -= allocSize + sizeof(Header) + sizeof(Footer);
 
-				free_foot = reinterpret_cast<Footer*>(reinterpret_cast<char*>(free_head) + sizeof(Header) + free_head->size);
-				free_foot->size = free_head->size;
+		//		free_foot = reinterpret_cast<Footer*>(reinterpret_cast<char*>(free_head) + sizeof(Header) + free_head->size);
+		//		free_foot->size = free_head->size;
 
-				used_head = reinterpret_cast<Header*>(reinterpret_cast<char*>(free_foot) + sizeof(Footer));
-				used_head->size = allocSize;
-				used_head->size |= 1 << 31;
-				used_head->next = used_head->prev = nullptr;
+		//		used_head = reinterpret_cast<Header*>(reinterpret_cast<char*>(free_foot) + sizeof(Footer));
+		//		used_head->size = allocSize;
+		//		used_head->size |= 1 << 31;
+		//		used_head->next = used_head->prev = nullptr;
 
-				data = reinterpret_cast<void*>(reinterpret_cast<char*>(used_head) + sizeof(Header));	
+		//		data = reinterpret_cast<void*>(reinterpret_cast<char*>(used_head) + sizeof(Header));	
 
-				used_foot = reinterpret_cast<Footer*>(reinterpret_cast<char*>(used_head) + sizeof(Header) + allocSize);
-				used_foot->size = used_head->size;
+		//		used_foot = reinterpret_cast<Footer*>(reinterpret_cast<char*>(used_head) + sizeof(Header) + allocSize);
+		//		used_foot->size = used_head->size;
 
-			// No Split
-			} else {
-				if ( freeListEntry->next == freeListEntry ) {
-					freeListEntry = nullptr;
-				} else if ( freeListEntry == free_head ) {
-					freeListEntry = freeListEntry->next;
-				}
+		//	// No Split
+		//	} else {
+		//		if ( freeListEntry->next == freeListEntry ) {
+		//			freeListEntry = nullptr;
+		//		} else if ( freeListEntry == free_head ) {
+		//			freeListEntry = freeListEntry->next;
+		//		}
 
-				free_head->prev->next = free_head->next;
-				free_head->next->prev = free_head->prev;
-				free_head->size |= 1 << 31;
+		//		free_head->prev->next = free_head->next;
+		//		free_head->next->prev = free_head->prev;
+		//		free_head->size |= 1 << 31;
 
-				data = reinterpret_cast<void*>(reinterpret_cast<char*>(free_head) + sizeof(Header));
+		//		data = reinterpret_cast<void*>(reinterpret_cast<char*>(free_head) + sizeof(Header));
 
-				//AllocateNoSplitSolution(free_head, &data);
-			}
+		//		//AllocateNoSplitSolution(free_head, &data);
+		//	}
 
-		}
+		//}
 		
 		// TODO - comment out the solution version and write your own, you can ignore the synchronization code
-		//if ( AllocateSplitSolution(free_head, &data, allocSize) == false ) {
-		//	AllocateNoSplitSolution(free_head, &data);
-		//}
+		if ( AllocateSplitSolution(free_head, &data, allocSize) == false ) {
+			AllocateNoSplitSolution(free_head, &data);
+		}
 
 		MM_HEAP_UNLOCK;
 		return data;
 	}
 
 	void Heap::DeAllocate(void * data) {
-		// MM_HEAP_LOCK;
+		MM_HEAP_LOCK;
 		bool merged_left = false;
 		bool merged_right = false;
 
-		// TODO - comment out the solution version and write your own, you can ignore the synchronization code
-		merged_right = DeAllocateRightSolution(data);
-		merged_left = DeAllocateLeftSolution(data);
+		Header* currentHeader = reinterpret_cast<Header*>(reinterpret_cast<char*>(data) - sizeof(Header));
+		currentHeader->size &= ~(1 << 31);
+		Footer* currentFooter = reinterpret_cast<Footer*>(reinterpret_cast<char*>(data) + currentHeader->size);
+		currentFooter->size = currentHeader->size;
 
-		if ( merged_left != true ) {
-			DeAllocateMiddleSolution(data);
+		//Merge Right
+		if ( currentFooter != lastFooter ) {
+			Header* rightHeader = reinterpret_cast<Header*>(reinterpret_cast<char*>(currentFooter) + sizeof(Footer));
+			if ( !(rightHeader->size & (1 << 31)) ) {
+				if ( rightHeader == freeListEntry ) {
+					freeListEntry = rightHeader->prev;
+				}
+				rightHeader->prev->next = rightHeader->next;
+				rightHeader->next->prev = rightHeader->prev;
+				currentHeader->size += rightHeader->size + sizeof(Header) + sizeof(Footer);
+				Footer* rightFooter = reinterpret_cast<Footer*>(reinterpret_cast<char*>(rightHeader) + sizeof(Header) + rightHeader->size);
+				rightFooter->size = currentHeader->size;
+				currentFooter = rightFooter;
+			}
+		}
+		//Merge Left
+		if ( currentHeader != firstHeader ) {
+			Footer* leftFooter = reinterpret_cast<Footer*>(reinterpret_cast<char*>(currentHeader) - sizeof(Footer));
+			if ( !(leftFooter->size & (1 << 31)) ) {
+				Header* leftHeader = reinterpret_cast<Header*>(reinterpret_cast<char*>(leftFooter) - leftFooter->size - sizeof(Header));
+				currentFooter->size = leftHeader->size += currentHeader->size + sizeof(Header) + sizeof(Footer);
+				merged_left = true;
+			}
+
+		}
+		//Merge Middle
+		if ( !merged_left ) {
+			if ( freeListEntry ) {
+				freeListEntry->prev->next = currentHeader;
+				currentHeader->prev = freeListEntry->prev;
+				currentHeader->next = freeListEntry;
+				freeListEntry->prev = currentHeader;
+			} else {
+				currentHeader->prev = currentHeader;
+				currentHeader->next = currentHeader;
+				freeListEntry = currentHeader;
+			}
+
 		}
 
-		// MM_HEAP_UNLOCK;
+		//Merge Middle
+
+		// TODO - comment out the solution version and write your own, you can ignore the synchronization code
+		/*merged_right = DeAllocateRightSolution(data);*/
+		//merged_left = DeAllocateLeftSolution(data);
+
+		/*if (merged_left != true)
+		{
+		DeAllocateMiddleSolution(data);
+		}*/
+
+		MM_HEAP_UNLOCK;
 	}
 
 	void Heap::CoreDump() {

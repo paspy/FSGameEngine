@@ -53,6 +53,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MyWorker.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="WorkerExample.h" />
     <ClInclude Include="WorkerThread.h" />

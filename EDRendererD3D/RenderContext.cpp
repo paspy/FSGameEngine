@@ -20,10 +20,8 @@ using namespace EDUtilities;
 using namespace std;
 
 
-namespace EDRendererD3D
-{
-	RenderContext::RenderContext()
-	{
+namespace EDRendererD3D {
+	RenderContext::RenderContext() {
 		renderSetPtr = 0;
 
 		currentStage = RS_UNLIT;
@@ -31,32 +29,48 @@ namespace EDRendererD3D
 
 		castShadows = false;
 	}
-	RenderContext::~RenderContext()
-	{
+	RenderContext::~RenderContext() {
 		delete renderSetPtr;
 	}
 
-	bool RenderContext::CreateEffect(const char *effectFile)
-	{
+	bool RenderContext::CreateEffect(const char *effectFile) {
 		effectPtr = ContentManager::LoadXML<ShaderEffect>(effectFile);
-		
+
 		return true;
 	}
 
-	void RenderContext::ContextSharedRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextSharedRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextSharedRenderFuncSolution(node);
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetIndexBuffer(IndexBuffer::GetReference().GetIndices(), DXGI_FORMAT_R32_UINT, 0);
+
+		Renderer::theContextPtr->VSSetShader(context.GetRenderStageTechnique()->GetPass(0)->GetVertexShader(), 0, 0);
+		Renderer::theContextPtr->PSSetShader(context.GetRenderStageTechnique()->GetPass(0)->GetPixelShader(), 0, 0);
+		Renderer::theContextPtr->HSSetShader(context.GetRenderStageTechnique()->GetPass(0)->GetHullShader(), 0, 0);
+		Renderer::theContextPtr->GSSetShader(context.GetRenderStageTechnique()->GetPass(0)->GetGeometryShader(), 0, 0);
+		Renderer::theContextPtr->DSSetShader(context.GetRenderStageTechnique()->GetPass(0)->GetDomainShader(), 0, 0);
+
+		Renderer::Render(context.GetRenderSet());
+
+		//return ContextSharedRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextPosNormalUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosNormalUVRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPosNormalUVRenderFuncSolution(node);
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSNORMTEX));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSNORMTEX);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPosNormTexBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+		//return ContextPosNormalUVRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextTransparentPosNormalUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextTransparentPosNormalUVRenderFunc(RenderNode &node) {
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 		ContextPosNormalUVRenderFunc(node);
@@ -65,21 +79,29 @@ namespace EDRendererD3D
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 	}
 
-	void RenderContext::ContextPosNormalUVNoCullRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosNormalUVNoCullRenderFunc(RenderNode &node) {
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_NOCULL);
 		return ContextPosNormalUVRenderFunc(node);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_Default);
 	}
 
-	void RenderContext::ContextPosNormalTangentUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosNormalTangentUVRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPosNormalTangentUVRenderFuncSolution(node);
+
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSNORMTANTEX));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSNORMTANTEX);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPosNormTanTexBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPosNormalTangentUVRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextTransparentPosNormalTangentUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextTransparentPosNormalTangentUVRenderFunc(RenderNode &node) {
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 		ContextPosNormalTangentUVRenderFunc(node);
@@ -88,21 +110,29 @@ namespace EDRendererD3D
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 	}
 
-	void RenderContext::ContextPosNormalTangentUVNoCullRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosNormalTangentUVNoCullRenderFunc(RenderNode &node) {
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_NOCULL);
 		return ContextPosNormalTangentUVRenderFunc(node);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_Default);
 	}
 
-	void RenderContext::ContextPositionRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPositionRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPositionRenderFuncSolution(node);
+
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POS));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POS);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPositionBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPositionRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextTransparentPositionRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextTransparentPositionRenderFunc(RenderNode &node) {
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 		ContextPositionRenderFunc(node);
@@ -111,14 +141,23 @@ namespace EDRendererD3D
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 	}
 
-	void RenderContext::ContextPositionUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPositionUVRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPositionUVRenderFuncSolution(node);
+
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSTEX));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSTEX);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPositionTexBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPositionUVRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextTransparentPositionUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextTransparentPositionUVRenderFunc(RenderNode &node) {
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 		ContextPositionUVRenderFunc(node);
@@ -127,18 +166,26 @@ namespace EDRendererD3D
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 	}
 
-	void RenderContext::ContextPositionColorRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPositionColorRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_NOCULL);
 
-		return ContextPositionColorRenderFuncSolution(node);
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSCOLOR));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSCOLOR);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPositionColorBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPositionColorRenderFuncSolution(node);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_Default);
 
 	}
 
-	void RenderContext::ContextTransparentPositionColorRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextTransparentPositionColorRenderFunc(RenderNode &node) {
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 		ContextPositionColorRenderFunc(node);
@@ -147,49 +194,61 @@ namespace EDRendererD3D
 		BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 	}
 
-	void RenderContext::ContextPosBoneWeightNormalUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosBoneWeightNormalUVRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPosBoneWeightNormalUVRenderFuncSolution(node);
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSBONEWEIGHTNORMTEX));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSBONEWEIGHTNORMTEX);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPosBoneWeightNormTexBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPosBoneWeightNormalUVRenderFuncSolution(node);
 	}
 
-	void RenderContext::ContextPosBoneWeightNormalTanUVRenderFunc(RenderNode &node)
-	{
+	void RenderContext::ContextPosBoneWeightNormalTanUVRenderFunc(RenderNode &node) {
 		// Implement a solution for the Renderer Lab
-		return ContextPosBoneWeightNormalTanUVRenderFuncSolution(node);
+
+		RenderContext &context = (RenderContext&)node;
+
+		Renderer::theContextPtr->IASetInputLayout(InputLayoutManager::GetReference().GetInputLayout(eVERTEX_POSBONEWEIGHTNORMTANTEX));
+		Renderer::theContextPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		UINT stride = sizeof(VERTEX_POSBONEWEIGHTNORMTANTEX);
+		UINT offset = 0;
+		ID3D11Buffer *vertBuffer = VertexBufferManager::GetReference().GetPosBoneWeightNormTanTexBuffer().GetVertexBuffer();
+		Renderer::theContextPtr->IASetVertexBuffers(0, 1, &vertBuffer, &stride, &offset);
+		ContextSharedRenderFunc(node);
+
+		//return ContextPosBoneWeightNormalTanUVRenderFuncSolution(node);
 	}
 
-	void RenderContext::SetRenderStageTechnique(TiXmlElement *elementPtr, 
-		const char *techName, const char *xmlFileNamePtr, RenderStage stage)
-	{
+	void RenderContext::SetRenderStageTechnique(TiXmlElement *elementPtr,
+		const char *techName, const char *xmlFileNamePtr, RenderStage stage) {
 		TiXmlElement* techElePtr = elementPtr->FirstChildElement(techName);
-		if( techElePtr != 0 )
-		{
-			if( techElePtr->GetText() != 0 )
-			{
+		if ( techElePtr != 0 ) {
+			if ( techElePtr->GetText() != 0 ) {
 				std::string technique = techElePtr->GetText();
-				if( technique.length() != 0 )
-				{
+				if ( technique.length() != 0 ) {
 					ShaderTechnique *techPtr = effectPtr.GetContent()->GetTechniqueByName(technique.c_str());
-					if(!techPtr)
-					{
+					if ( !techPtr ) {
 						InternalOutput::GetReference().Error(
-							"Context %s specifies %s, but the technique does not exist in the shader\n", 
+							"Context %s specifies %s, but the technique does not exist in the shader\n",
 							xmlFileNamePtr, techName);
 
 					}
-					SetRenderStageTechnique( stage, techPtr);
+					SetRenderStageTechnique(stage, techPtr);
 				}
 			}
 		}
 	}
 
-	RenderContext* RenderContext::LoadXML(const char* xmlFileNamePtr, const char* indentifier)
-	{
+	RenderContext* RenderContext::LoadXML(const char* xmlFileNamePtr, const char* indentifier) {
 		TiXmlDocument doc((ContentManager::theContentPath + xmlFileNamePtr).c_str());
 
-		if(!doc.LoadFile())
-		{
+		if ( !doc.LoadFile() ) {
 			InternalOutput::GetReference().Error(
 				"Failed to load %s, does the file exist?\n", xmlFileNamePtr);
 			return 0;
@@ -200,8 +259,7 @@ namespace EDRendererD3D
 		TiXmlHandle hRoot(0);
 
 		elementPtr = hDoc.FirstChildElement().Element();
-		if( !elementPtr )
-		{
+		if ( !elementPtr ) {
 			InternalOutput::GetReference().Error(
 				"Failed to load %s, is the file empty?\n", xmlFileNamePtr);
 			return 0;
@@ -209,10 +267,9 @@ namespace EDRendererD3D
 
 		std::string rootName = elementPtr->Value();
 
-		if( strcmp(rootName.c_str(), "GDRenderContext") != 0 )
-		{
+		if ( strcmp(rootName.c_str(), "GDRenderContext") != 0 ) {
 			InternalOutput::GetReference().Error(
-				"Failed to load %s, missing a GDRenderContext element\n", 
+				"Failed to load %s, missing a GDRenderContext element\n",
 				xmlFileNamePtr);
 			return 0;
 		}
@@ -226,16 +283,14 @@ namespace EDRendererD3D
 		std::string castShadowString;
 		std::string renderStyleString;
 
-		if( pMaterialElement != 0 )
-		{
-			if(pMaterialElement->GetText() != 0)
+		if ( pMaterialElement != 0 ) {
+			if ( pMaterialElement->GetText() != 0 )
 				materialString = pMaterialElement->GetText();
 		}
 
 		// Error check for old Effect based shader usage
 		TiXmlElement* pEffectElement = elementPtr->FirstChildElement("Effect");
-		if(nullptr == pEffectElement )
-		{
+		if ( nullptr == pEffectElement ) {
 			InternalOutput::GetReference().Error(
 				"Failed to load %s, missing Effect element", xmlFileNamePtr);
 			return 0;
@@ -244,19 +299,17 @@ namespace EDRendererD3D
 
 		TiXmlElement* pTechniqueElement = elementPtr->FirstChildElement("Technique");
 
-		if( pTechniqueElement != 0 )
-		{
-			if( pTechniqueElement->GetText() != 0 )
+		if ( pTechniqueElement != 0 ) {
+			if ( pTechniqueElement->GetText() != 0 )
 				techniqueString = pTechniqueElement->GetText();
 		}
 
-		if( techniqueString.length() == 0 )
+		if ( techniqueString.length() == 0 )
 			techniqueString = "Basic";
 
 		TiXmlElement* pVertexFormatElement = elementPtr->FirstChildElement("VertexFormat");
 
-		if( pVertexFormatElement == 0 )
-		{
+		if ( pVertexFormatElement == 0 ) {
 			InternalOutput::GetReference().Error(
 				"Failed to load %s, missing a VertexFormat element\n", xmlFileNamePtr);
 			return 0;
@@ -266,51 +319,42 @@ namespace EDRendererD3D
 
 		bool isDeferredPointLightContext = false;
 		TiXmlElement* pPointLightTechnique = elementPtr->FirstChildElement("PointLightTechnique");
-		if( pPointLightTechnique != 0 )
-		{
-			if( pPointLightTechnique->GetText() != 0 )
-			{
+		if ( pPointLightTechnique != 0 ) {
+			if ( pPointLightTechnique->GetText() != 0 ) {
 				std::string technique = pPointLightTechnique->GetText();
-				if( technique.length() != 0 )
+				if ( technique.length() != 0 )
 					isDeferredPointLightContext = true;
 			}
 
-		}	
+		}
 		bool isDeferredDirLightContext = false;
 		TiXmlElement* pDirLightTechnique = elementPtr->FirstChildElement("DirLightTechnique");
-		if( pDirLightTechnique != 0 )
-		{
-			if( pDirLightTechnique->GetText() != 0 )
-			{
+		if ( pDirLightTechnique != 0 ) {
+			if ( pDirLightTechnique->GetText() != 0 ) {
 				std::string technique = pDirLightTechnique->GetText();
-				if( technique.length() != 0 )
+				if ( technique.length() != 0 )
 					isDeferredDirLightContext = true;
 			}
 		}
 		bool isDeferredSpotLightContext = false;
 		TiXmlElement* pSpotLightTechnique = elementPtr->FirstChildElement("SpotLightTechnique");
-		if( pSpotLightTechnique != 0 )
-		{
-			if( pSpotLightTechnique->GetText() != 0 )
-			{
+		if ( pSpotLightTechnique != 0 ) {
+			if ( pSpotLightTechnique->GetText() != 0 ) {
 				std::string technique = pSpotLightTechnique->GetText();
-				if( technique.length() != 0 )
+				if ( technique.length() != 0 )
 					isDeferredSpotLightContext = true;
 			}
 		}
 
 		bool castShadows = false;
 		TiXmlElement* pCastShadowsEle = elementPtr->FirstChildElement("CastShadows");
-		if( pCastShadowsEle != 0 )
-		{
+		if ( pCastShadowsEle != 0 ) {
 			castShadows = true;
 
-			if( pCastShadowsEle->GetText() != 0 )
-			{
-				if( strlen( pCastShadowsEle->GetText() ) != 0 &&
-					(_stricmp( pCastShadowsEle->GetText(), "false") == 0 ||
-					strcmp( pCastShadowsEle->GetText(), "0" ) == 0 ) )
-				{
+			if ( pCastShadowsEle->GetText() != 0 ) {
+				if ( strlen(pCastShadowsEle->GetText()) != 0 &&
+					(_stricmp(pCastShadowsEle->GetText(), "false") == 0 ||
+						strcmp(pCastShadowsEle->GetText(), "0") == 0) ) {
 					castShadows = false;
 				}
 			}
@@ -322,131 +366,85 @@ namespace EDRendererD3D
 
 		RenderContext* pRenderContext = 0;
 
-		if( materialString.length() != 0 )
-		{
+		if ( materialString.length() != 0 ) {
 			RenderContextWithTexture* pRcWithTex = new RenderContextWithTexture;
 			pRenderContext = pRcWithTex;
 
-			if( strcmp( vertexFormatString.c_str(), "VERTEX_POS" ) == 0 )
-			{
+			if ( strcmp(vertexFormatString.c_str(), "VERTEX_POS") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPositionRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POS;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSCOLOR" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSCOLOR") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPositionRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSCOLOR;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSTEX" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSTEX") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPositionUVRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSTEX;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTEX" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTEX") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPosNormalUVRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSNORMTEX;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPosNormalTangentUVRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSNORMTANTEX;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTEX" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTEX") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPosBoneWeightNormalUVRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSBONEWEIGHTNORMTEX;
-			}
-			else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTANTEX" ) == 0 )
-			{
+			} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTANTEX") == 0 ) {
 				pRcWithTex->RenderFunc = RenderContextWithTexture::ContextPosBoneWeightNormalTanUVRenderFunc;
 				pRcWithTex->vertexFormat = eVERTEX_POSBONEWEIGHTNORMTANTEX;
 			}
-		}
-		else
-		{
+		} else {
 			pRenderContext = new RenderContext;
 
-			if( "TRANSPARENT" == renderStyleString )
-			{
-				if( strcmp( vertexFormatString.c_str(), "VERTEX_POS" ) == 0 )
-				{
+			if ( "TRANSPARENT" == renderStyleString ) {
+				if ( strcmp(vertexFormatString.c_str(), "VERTEX_POS") == 0 ) {
 					pRenderContext->RenderFunc = ContextTransparentPositionRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POS;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSCOLOR" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSCOLOR") == 0 ) {
 					pRenderContext->RenderFunc = ContextTransparentPositionColorRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSCOLOR;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextTransparentPositionUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextTransparentPosNormalUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextTransparentPosNormalTangentUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTANTEX;
 				}
-			}
-			else
-			{
-				if( strcmp( vertexFormatString.c_str(), "VERTEX_POS" ) == 0 )
-				{
+			} else {
+				if ( strcmp(vertexFormatString.c_str(), "VERTEX_POS") == 0 ) {
 					pRenderContext->RenderFunc = ContextPositionRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POS;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSCOLOR" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSCOLOR") == 0 ) {
 					pRenderContext->RenderFunc = ContextPositionColorRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSCOLOR;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextPositionUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosNormalUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTEX;
-				}
-				else if (strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTEXNOCULL") == 0)
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTEXNOCULL") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosNormalUVNoCullRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTANTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosNormalTangentUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTANTEX;
-				}
-				else if (strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTANTEXNOCULL") == 0)
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSNORMTANTEXNOCULL") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosNormalTangentUVNoCullRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSNORMTANTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosBoneWeightNormalUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSBONEWEIGHTNORMTEX;
-				}
-				else if( strcmp( vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTANTEX" ) == 0 )
-				{
+				} else if ( strcmp(vertexFormatString.c_str(), "VERTEX_POSBONEWEIGHTNORMTANTEX") == 0 ) {
 					pRenderContext->RenderFunc = ContextPosBoneWeightNormalTanUVRenderFunc;
 					pRenderContext->vertexFormat = eVERTEX_POSBONEWEIGHTNORMTANTEX;
 				}
 			}
 		}
 
-		if( materialString.length() != 0 )
-		{
+		if ( materialString.length() != 0 ) {
 			//std::string materialFilePath = "Resources/GDAssets";
 			//materialFilePath += materialString;
 
@@ -456,91 +454,83 @@ namespace EDRendererD3D
 		pRenderContext->castShadows = castShadows;
 
 		// Set up shaders
-		if(!pRenderContext->CreateEffect((string("ShaderEffects/") + shaderEffectString).c_str()))
-		{
+		if ( !pRenderContext->CreateEffect((string("ShaderEffects/") + shaderEffectString).c_str()) ) {
 			InternalOutput::GetReference().Error(
-				"Failed to load %s, shader effect, %s, failed to load\n", xmlFileNamePtr, 
+				"Failed to load %s, shader effect, %s, failed to load\n", xmlFileNamePtr,
 				shaderEffectString.c_str());
 		}
 
 		ShaderTechnique *techPtr = nullptr;
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "GBufferTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "GBufferTechnique", xmlFileNamePtr,
 			RenderContext::RS_GBUFFER);
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthCameraTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthCameraTechnique", xmlFileNamePtr,
 			RenderContext::RS_DEPTH_CAMERA);
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthSpotLightTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthSpotLightTechnique", xmlFileNamePtr,
 			RenderContext::RS_DEPTH_SPT_LIGHT);
 
 		TiXmlElement* pDepthPointLightTechnique = elementPtr->FirstChildElement("DepthPointLightTechnique");
-		if( pDepthPointLightTechnique != 0 )
-		{
-			if( pDepthPointLightTechnique->GetText() != 0 )
-			{
+		if ( pDepthPointLightTechnique != 0 ) {
+			if ( pDepthPointLightTechnique->GetText() != 0 ) {
 				std::string technique = pDepthPointLightTechnique->GetText();
-				if( technique.length() != 0 )
-				{
+				if ( technique.length() != 0 ) {
 					ShaderTechnique *techPtr = pRenderContext->effectPtr.GetContent()->GetTechniqueByName(
 						technique.c_str());
-					if(!techPtr)
-					{
+					if ( !techPtr ) {
 						InternalOutput::GetReference().Error(
-							"Context %s specifies %s, but the technique does not exist in the shader\n", 
+							"Context %s specifies %s, but the technique does not exist in the shader\n",
 							xmlFileNamePtr, "DepthPointLightTechnique");
 
 					}
-					pRenderContext->SetRenderStageTechnique( 
+					pRenderContext->SetRenderStageTechnique(
 						RenderStage(RenderContext::RS_DEPTH_PNT_LIGHT), techPtr);
 				}
 			}
 		}
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthDirectionalLightTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "DepthDirectionalLightTechnique", xmlFileNamePtr,
 			RenderContext::RS_DEPTH_DIR_LIGHT);
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "UnlitTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "UnlitTechnique", xmlFileNamePtr,
 			RenderContext::RS_UNLIT);
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "TransparencyTechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "TransparencyTechnique", xmlFileNamePtr,
 			RenderContext::RS_TRANSPARENT);
 
-		pRenderContext->SetRenderStageTechnique(elementPtr, "GUITechnique", xmlFileNamePtr, 
+		pRenderContext->SetRenderStageTechnique(elementPtr, "GUITechnique", xmlFileNamePtr,
 			RenderContext::RS_GUI);
 
-		if( isDeferredPointLightContext )
-		{
+		if ( isDeferredPointLightContext ) {
 			std::string technique = pPointLightTechnique->GetText();
-			if( technique.length() != 0 )
-				pRenderContext->SetRenderStageTechnique( RenderContext::RS_PNT_LIGHT, 
-					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str() ));
+			if ( technique.length() != 0 )
+				pRenderContext->SetRenderStageTechnique(RenderContext::RS_PNT_LIGHT,
+					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str()));
 		}
 
-		if( isDeferredDirLightContext )
-		{
+		if ( isDeferredDirLightContext ) {
 			std::string technique = pDirLightTechnique->GetText();
-			if( technique.length() != 0 )
-				pRenderContext->SetRenderStageTechnique( RenderContext::RS_DIR_LIGHT, 
-					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str() ));
+			if ( technique.length() != 0 )
+				pRenderContext->SetRenderStageTechnique(RenderContext::RS_DIR_LIGHT,
+					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str()));
 		}
 
-		if( isDeferredSpotLightContext )
-		{
+		if ( isDeferredSpotLightContext ) {
 			std::string technique = pSpotLightTechnique->GetText();
-			if( technique.length() != 0 )
-				pRenderContext->SetRenderStageTechnique( RenderContext::RS_SPT_LIGHT, 
-					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str() ));
+			if ( technique.length() != 0 )
+				pRenderContext->SetRenderStageTechnique(RenderContext::RS_SPT_LIGHT,
+					pRenderContext->effectPtr.GetContent()->GetTechniqueByName(technique.c_str()));
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////
 		// Layout verification
 		//LayoutVerification((string("ShaderEffects/") + shaderEffectString).c_str(), vertexFormatString);
-		
+
 		// End layout verification
 
-		if( pRenderContext->GetRenderStageTechnique( RenderContext::RS_TRANSPARENT ) != 0 )
-			pRenderContext->CreateRenderSet( true, RenderSetSorted::ZSortSmaller );
+		if ( pRenderContext->GetRenderStageTechnique(RenderContext::RS_TRANSPARENT) != 0 )
+			pRenderContext->CreateRenderSet(true, RenderSetSorted::ZSortSmaller);
 		else
 			pRenderContext->CreateRenderSet();
 

@@ -49,5 +49,16 @@ const EDMath::Sphere& RenderShape::GetLocalSphere(void) const
 void RenderShape::IndexedPrimitiveRenderFunc(RenderNode &node)
 {
     // Implement a solution for the Renderer Lab
-    return IndexedPrimitiveRenderFuncSolution(node);
+
+	RenderShape &shapeNode = (RenderShape&)node;
+	
+	Float4x4 tmp = ViewPortManager::GetReference().GetActiveViewProjection();
+	XMFLOAT4X4 AVP;
+
+	memcpy(&AVP, &tmp, sizeof(Float4x4));
+
+	Renderer::SetPerObjectData(XMLoadFloat4x4(&shapeNode.GetWorldMatrix()) * XMLoadFloat4x4(&AVP), XMLoadFloat4x4(&shapeNode.GetWorldMatrix()));
+
+	Renderer::theContextPtr->DrawIndexed(shapeNode.GetRenderMesh()->GetPrimitiveCount() * 3, shapeNode.GetRenderMesh()->GetStartIndex(), shapeNode.GetRenderMesh()->GetStartVertex());
+    //return IndexedPrimitiveRenderFuncSolution(node);
 }

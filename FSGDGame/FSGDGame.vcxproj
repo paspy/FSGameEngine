@@ -682,7 +682,7 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).cso</ObjectFileOutput>
     </FxCompile>
-    <None Include="DeferredDirLight_PS.hlsl">
+    <FxCompile Include="DeferredDirLight_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">Pixel</ShaderType>
@@ -708,7 +708,8 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/D3DCOMPILE_DEBUG %(AdditionalOptions)</AdditionalOptions>
-    </None>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="DeferredPointLightWithShadows_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
@@ -1410,7 +1411,7 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).cso</ObjectFileOutput>
     </FxCompile>
-    <None Include="GBuffersBump_PS.hlsl">
+    <FxCompile Include="GBuffersBump_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">Pixel</ShaderType>
@@ -1432,8 +1433,9 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-    </None>
-    <None Include="GBuffersBump_VS.hlsl">
+      <FileType>Document</FileType>
+    </FxCompile>
+    <FxCompile Include="GBuffersBump_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">Vertex</ShaderType>
@@ -1455,7 +1457,8 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-    </None>
+      <FileType>Document</FileType>
+    </FxCompile>
     <None Include="GBuffersSkinned_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Vertex</ShaderType>
@@ -1664,7 +1667,7 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).cso</ObjectFileOutput>
     </FxCompile>
-    <None Include="GBuffers_PS.hlsl">
+    <FxCompile Include="GBuffers_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">Pixel</ShaderType>
@@ -1689,8 +1692,9 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">false</ExcludedFromBuild>
-    </None>
-    <None Include="GBuffers_VS.hlsl">
+      <FileType>Document</FileType>
+    </FxCompile>
+    <FxCompile Include="GBuffers_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|Win32'">Vertex</ShaderType>
@@ -1712,7 +1716,8 @@ copy "..\ReleaseLibsx64\python34.dll" "."</Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='EngineToolRelease|x64'">4.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
-    </None>
+      <FileType>Document</FileType>
+    </FxCompile>
     <FxCompile Include="Green_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='EngineToolDebug|Win32'">Pixel</ShaderType>

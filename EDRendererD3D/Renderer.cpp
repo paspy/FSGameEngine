@@ -107,11 +107,11 @@ namespace EDRendererD3D {
 			1,										// Number of Feature Levels
 			D3D11_SDK_VERSION,						// D3D11_SDK_VERSION
 			&swapChainDesc,							// Swap Chain Desciptions
-			&theSwapChainPtr,							// Swap Chain Pointer
+			&theSwapChainPtr,						// Swap Chain Pointer
 			&theDevicePtr,							// D3D Device
 			&FeatureLevelsSupported,				// Return supported levels
-			&theContextPtr 					// Device Context Pointer
-			);
+			&theContextPtr 							// Device Context Pointer
+		);
 
 		BuildPerObjectConstantBuffers();
 
@@ -119,6 +119,11 @@ namespace EDRendererD3D {
 	}
 
 	void Renderer::ResizeBuffers() {
+		ReleaseCOM(theRenderTargetViewPtr);
+		ReleaseCOM(theDepthStencilBufferPtr);
+		ReleaseCOM(theDepthStencilViewPtr);
+		ReleaseCOM(theBackBufferPtr);
+
 		// Resize the swap chain and recreate the render target view.
 		HR(theSwapChainPtr->ResizeBuffers(1, resolutionWidth, resolutionHeight, DXGI_FORMAT_UNKNOWN, 0));
 

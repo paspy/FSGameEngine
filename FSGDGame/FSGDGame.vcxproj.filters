@@ -366,20 +366,11 @@
     <None Include="GBuffersBumpTess_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
     </None>
-    <None Include="GBuffersBump_VS.hlsl">
-      <Filter>Shaders\VertexShaders</Filter>
-    </None>
     <None Include="GBuffersSkinned_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
     </None>
     <None Include="GBuffersTess_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
-    </None>
-    <None Include="GBuffers_VS.hlsl">
-      <Filter>Shaders\VertexShaders</Filter>
-    </None>
-    <None Include="DeferredDirLight_PS.hlsl">
-      <Filter>Shaders\Pixel Shaders</Filter>
     </None>
     <None Include="DeferredPointLightWithShadows_PS.hlsl">
       <Filter>Shaders\Pixel Shaders</Filter>
@@ -400,12 +391,6 @@
       <Filter>Shaders\Pixel Shaders</Filter>
     </None>
     <None Include="DrawEdge_PS.hlsl">
-      <Filter>Shaders\Pixel Shaders</Filter>
-    </None>
-    <None Include="GBuffersBump_PS.hlsl">
-      <Filter>Shaders\Pixel Shaders</Filter>
-    </None>
-    <None Include="GBuffers_PS.hlsl">
       <Filter>Shaders\Pixel Shaders</Filter>
     </None>
     <None Include="GBuffersTessellatedTerrain_HS.hlsl">
@@ -587,6 +572,21 @@
     </FxCompile>
     <FxCompile Include="GBuffersTessellatedTerrain_VS.hlsl">
       <Filter>Shaders\VertexShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GBuffers_VS.hlsl">
+      <Filter>Shaders\VertexShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GBuffers_PS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GBuffersBump_VS.hlsl">
+      <Filter>Shaders\VertexShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GBuffersBump_PS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DeferredDirLight_PS.hlsl">
+      <Filter>Shaders\Pixel Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

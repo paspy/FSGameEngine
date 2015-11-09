@@ -35,59 +35,49 @@ int RenderController::thePointShadowSize = 256;
 int RenderController::theDirectionalShadowSize = 2048;
 int RenderController::theSpotShadowSize = 256;
 
-RenderController *RenderController::GetInstance()
-{
-	if( instancePtr == 0 )
+RenderController *RenderController::GetInstance() {
+	if ( instancePtr == 0 )
 		instancePtr = new RenderController;
 
 	return instancePtr;
 }
 
-void RenderController::DeleteInstance(void)
-{
+void RenderController::DeleteInstance(void) {
 	delete instancePtr;
 	instancePtr = 0;
 }
 
-void OnRenderDepthCallback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderDepthCallback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_Depth);
 }
-void OnRenderDiffuseCallback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderDiffuseCallback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_Diffuse);
 }
-void OnRenderNormalCallback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderNormalCallback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_Normal);
 }
-void OnRenderSpecularCallback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderSpecularCallback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_Specular);
 }
-void OnRenderDirShadow0Callback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderDirShadow0Callback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_DirShadow0);
 }
-void OnRenderDirShadow1Callback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderDirShadow1Callback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_DirShadow1);
 }
-void OnRenderDirShadow2Callback(unsigned int eventId, const void *eventData, void *listener)
-{
+void OnRenderDirShadow2Callback(unsigned int eventId, const void *eventData, void *listener) {
 	RenderController::GetInstance()->ToggleDebugRender();
 	RenderController::GetInstance()->SetDebugBufferToRender(RenderController::GB_DirShadow2);
 }
 
 
-RenderController::RenderController() 
-{
+RenderController::RenderController() {
 	transparentContextPtr = 0;
 
 	screenQuadMeshPtr = 0;
@@ -100,11 +90,10 @@ RenderController::RenderController()
 	VisibilityQueryInterface::theShapePtr = 0;
 }
 
-RenderController::~RenderController()
-{
-	if(screenQuadMeshPtr)
+RenderController::~RenderController() {
+	if ( screenQuadMeshPtr )
 		delete screenQuadMeshPtr;
-	if(VisibilityQueryInterface::theShapePtr)
+	if ( VisibilityQueryInterface::theShapePtr )
 		delete VisibilityQueryInterface::theShapePtr;
 
 	delete spriteBatchPtr;
@@ -119,8 +108,7 @@ RenderController::~RenderController()
 	PostProcessController::DeleteInstance();
 }
 
-void RenderController::Initialize()
-{
+void RenderController::Initialize() {
 	CreateContexts();
 	CreateDepthBuffers();
 	InitializeConsoleCommands();
@@ -153,47 +141,45 @@ void RenderController::Initialize()
 	viewPortMan.SetActiveViewPort(0);
 
 	// Read from the setting file the desired shadow map size
-	EDUtilities::Settings::GetInstance()->GetSetting("DirectionalShadowSize", 
+	EDUtilities::Settings::GetInstance()->GetSetting("DirectionalShadowSize",
 		theDirectionalShadowSize, theDirectionalShadowSize);
-	EDUtilities::Settings::GetInstance()->GetSetting("PointShadowSize", 
+	EDUtilities::Settings::GetInstance()->GetSetting("PointShadowSize",
 		thePointShadowSize, thePointShadowSize);
-	EDUtilities::Settings::GetInstance()->GetSetting("SpotShadowSize", 
+	EDUtilities::Settings::GetInstance()->GetSetting("SpotShadowSize",
 		theSpotShadowSize, theSpotShadowSize);
 
 }
 
-void RenderController::UpdateResolution()
-{
+void RenderController::UpdateResolution() {
 	InitializeTextureSamplers();
 	CreateRenderTargets();
 
 	PostProcessController::GetInstance()->UpdateResolution();
 }
 
-void RenderController::CreateContexts()
-{
-	twoDContext = ContentManager::LoadXML<RenderContext>( 
+void RenderController::CreateContexts() {
+	twoDContext = ContentManager::LoadXML<RenderContext>(
 		"GDRenderContext/rcx_TwoDPassThrough.xml");
 
-	directionDeferredContextHandle = ContentManager::LoadXML<RenderContext>( 
+	directionDeferredContextHandle = ContentManager::LoadXML<RenderContext>(
 		"GDRenderContext/rcx_DirectionalLightDeferred.xml");
-	directionDeferredContextHandle.GetContent()->SetRenderStage( RenderContext::RS_DIR_LIGHT );
+	directionDeferredContextHandle.GetContent()->SetRenderStage(RenderContext::RS_DIR_LIGHT);
 
-	pointLightContextHandle = ContentManager::LoadXML<RenderContext>( 
-		"GDRenderContext/rcx_PointLightDeferred.xml" );
-	pointLightContextHandle.GetContent()->SetRenderStage( RenderContext::RS_PNT_LIGHT );
+	pointLightContextHandle = ContentManager::LoadXML<RenderContext>(
+		"GDRenderContext/rcx_PointLightDeferred.xml");
+	pointLightContextHandle.GetContent()->SetRenderStage(RenderContext::RS_PNT_LIGHT);
 
-	pointLightWithShadowsContextHandle = ContentManager::LoadXML<RenderContext>( 
-		"GDRenderContext/rcx_PointLightWithShadowsDeferred.xml" );
-	pointLightWithShadowsContextHandle.GetContent()->SetRenderStage( RenderContext::RS_PNT_LIGHT );
+	pointLightWithShadowsContextHandle = ContentManager::LoadXML<RenderContext>(
+		"GDRenderContext/rcx_PointLightWithShadowsDeferred.xml");
+	pointLightWithShadowsContextHandle.GetContent()->SetRenderStage(RenderContext::RS_PNT_LIGHT);
 
-	spotLightContextHandle = ContentManager::LoadXML<RenderContext>( 
-		"GDRenderContext/rcx_SpotLightDeferred.xml" );
-	spotLightContextHandle.GetContent()->SetRenderStage( RenderContext::RS_SPT_LIGHT );
+	spotLightContextHandle = ContentManager::LoadXML<RenderContext>(
+		"GDRenderContext/rcx_SpotLightDeferred.xml");
+	spotLightContextHandle.GetContent()->SetRenderStage(RenderContext::RS_SPT_LIGHT);
 
-	spotLightWithShadowsContextHandle = ContentManager::LoadXML<RenderContext>( 
-		"GDRenderContext/rcx_SpotLightWithShadowsDeferred.xml" );
-	spotLightWithShadowsContextHandle.GetContent()->SetRenderStage( RenderContext::RS_SPT_LIGHT );
+	spotLightWithShadowsContextHandle = ContentManager::LoadXML<RenderContext>(
+		"GDRenderContext/rcx_SpotLightWithShadowsDeferred.xml");
+	spotLightWithShadowsContextHandle.GetContent()->SetRenderStage(RenderContext::RS_SPT_LIGHT);
 
 	debugLines = ContentManager::LoadXML<RenderContext>("GDRenderContext/rcx_DebugLines.xml");
 	AddRenderContext(debugLines.GetContent());
@@ -204,99 +190,86 @@ void RenderController::CreateContexts()
 	//TerrainManager::GetReference().Initialize();
 }
 
-void RenderController::AddRenderContext(RenderContext* pContext)
-{
+void RenderController::AddRenderContext(RenderContext* pContext) {
 	unsigned int pTechniqueValue = 0;
 	std::list< RenderContext*>::iterator listIter;
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_DEPTH_SPT_LIGHT );
-	pTechniqueValue |= (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_DEPTH_PNT_LIGHT );
-	pTechniqueValue |= (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_DEPTH_DIR_LIGHT );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_DEPTH_SPT_LIGHT);
+	pTechniqueValue |= (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_DEPTH_PNT_LIGHT);
+	pTechniqueValue |= (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_DEPTH_DIR_LIGHT);
 
-	for( listIter = shadowCasters.begin(); listIter != shadowCasters.end(); ++listIter )
-	{
-		if( (*listIter) == pContext )
-		{
+	for ( listIter = shadowCasters.begin(); listIter != shadowCasters.end(); ++listIter ) {
+		if ( (*listIter) == pContext ) {
 			pTechniqueValue = 0;
 			break;
 		}
 	}
-	if( pTechniqueValue != 0 )
-		shadowCasters.push_back( pContext );
+	if ( pTechniqueValue != 0 )
+		shadowCasters.push_back(pContext);
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_GBUFFER );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_GBUFFER);
 
-	for( listIter = gBufferContexts.begin(); listIter != gBufferContexts.end(); ++listIter )
-	{
-		if( (*listIter) == pContext )
-		{
+	for ( listIter = gBufferContexts.begin(); listIter != gBufferContexts.end(); ++listIter ) {
+		if ( (*listIter) == pContext ) {
 			pTechniqueValue = 0;
 			break;
 		}
 	}
 
-	if( pTechniqueValue != 0 )
-		gBufferContexts.push_back( pContext );
+	if ( pTechniqueValue != 0 )
+		gBufferContexts.push_back(pContext);
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_DEPTH_CAMERA );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_DEPTH_CAMERA);
 
-	for( listIter = depthCameraContexts.begin(); listIter != depthCameraContexts.end(); ++listIter )
-	{
-		if( (*listIter) == pContext )
-		{
+	for ( listIter = depthCameraContexts.begin(); listIter != depthCameraContexts.end(); ++listIter ) {
+		if ( (*listIter) == pContext ) {
 			pTechniqueValue = 0;
 			break;
 		}
 	}
-	if( pTechniqueValue != 0 )
-		depthCameraContexts.push_back( pContext );
+	if ( pTechniqueValue != 0 )
+		depthCameraContexts.push_back(pContext);
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_UNLIT );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_UNLIT);
 
-	for( listIter = unlitOpaqueContexts.begin(); listIter != unlitOpaqueContexts.end(); ++listIter )
-	{
-		if( (*listIter) == pContext )
-		{
+	for ( listIter = unlitOpaqueContexts.begin(); listIter != unlitOpaqueContexts.end(); ++listIter ) {
+		if ( (*listIter) == pContext ) {
 			pTechniqueValue = 0;
 			break;
 		}
 	}
-	if( pTechniqueValue != 0 )
-		unlitOpaqueContexts.push_back( pContext );
+	if ( pTechniqueValue != 0 )
+		unlitOpaqueContexts.push_back(pContext);
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_GUI );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_GUI);
 
-	for( listIter = guiContexts.begin(); listIter != guiContexts.end(); ++listIter )
-	{
-		if( (*listIter) == pContext )
-		{
+	for ( listIter = guiContexts.begin(); listIter != guiContexts.end(); ++listIter ) {
+		if ( (*listIter) == pContext ) {
 			pTechniqueValue = 0;
 			break;
 		}
 	}
-	if( pTechniqueValue != 0 )
-		guiContexts.push_back( pContext );
+	if ( pTechniqueValue != 0 )
+		guiContexts.push_back(pContext);
 
-	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique( RenderContext::RS_TRANSPARENT );
+	pTechniqueValue = (unsigned int)pContext->GetRenderStageTechnique(RenderContext::RS_TRANSPARENT);
 
-	if( pTechniqueValue != 0 )
-	{
+	if ( pTechniqueValue != 0 ) {
 		transparentContextPtr = pContext;
 	}
 }
 
-void RenderController::CreateRenderTargets()
-{
+void RenderController::CreateRenderTargets() {
 	UINT width = Renderer::GetResolutionWidth();
 	UINT height = Renderer::GetResolutionHeight();
 	// Set up the scene targets
 	sceneTarget.Create(Renderer::theDepthStencilViewPtr, Renderer::theDepthStencilBufferPtr);
 	//sceneTargetView.Create(width, height,
-		sceneTargetView.Create(width, height,
+	sceneTargetView.Create(width, height,
 		DXGI_FORMAT_R8G8B8A8_UNORM, "Scene Target");
 	sceneTarget.AddTarget(&sceneTargetView);
 
-	gBufferRT.Create( Renderer::theDepthStencilViewPtr, Renderer::theDepthStencilBufferPtr);
+	gBufferRT.Create(Renderer::theDepthStencilViewPtr, Renderer::theDepthStencilBufferPtr);
 	// Diffuse
 	//gBufferDiffuseTargetView.Create(width, height,
 	gBufferDiffuseTargetView.Create(width, height,
@@ -328,28 +301,26 @@ void RenderController::CreateRenderTargets()
 
 }
 
-void RenderController::CreateDepthBuffers()
-{
+void RenderController::CreateDepthBuffers() {
 	spotDepths.Create(theSpotShadowSize, theSpotShadowSize);
-	spotDepthsTargetView.Create(theSpotShadowSize, theSpotShadowSize, 
+	spotDepthsTargetView.Create(theSpotShadowSize, theSpotShadowSize,
 		DXGI_FORMAT_R32_FLOAT, "Spot Depth Target");
 	spotDepths.AddTarget(&spotDepthsTargetView);
 }
 
-void RenderController::CreateConstantBuffers()
-{
+void RenderController::CreateConstantBuffers() {
 	neverChangeCBuffer.Release();
 	cameraCBuffer.Release();
 
-    D3D11_BUFFER_DESC bd;
-    ZeroMemory( &bd, sizeof(bd) );
-    bd.Usage = D3D11_USAGE_DYNAMIC;
-    bd.ByteWidth = sizeof(cbMisc);
-    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(bd));
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(cbMisc);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
 	D3D11_SUBRESOURCE_DATA InitData;
-    ZeroMemory( &InitData, sizeof(InitData) );
+	ZeroMemory(&InitData, sizeof(InitData));
 
 	float width = (float)Renderer::GetResolutionWidth();
 	float height = (float)Renderer::GetResolutionHeight();
@@ -366,13 +337,13 @@ void RenderController::CreateConstantBuffers()
 
 	miscBuffer.gMaxTessDistance = 25.0f;
 	miscBuffer.gMinTessDistance = 1.0f;
-	miscBuffer.gMaxTessFactor	= 24.0f;
-	miscBuffer.gMinTessFactor	= 1.0f;
+	miscBuffer.gMaxTessFactor = 24.0f;
+	miscBuffer.gMinTessFactor = 1.0f;
 
 	InitData.pSysMem = &miscBuffer;
 
 	HR(Renderer::theDevicePtr->CreateBuffer(&bd, &InitData, &neverChangeCBuffer));
-	
+
 	Renderer::theContextPtr->VSSetConstantBuffers(miscBuffer.REGISTER_SLOT, 1, &neverChangeCBuffer.p);
 	Renderer::theContextPtr->PSSetConstantBuffers(miscBuffer.REGISTER_SLOT, 1, &neverChangeCBuffer.p);
 	Renderer::theContextPtr->GSSetConstantBuffers(miscBuffer.REGISTER_SLOT, 1, &neverChangeCBuffer.p);
@@ -380,8 +351,8 @@ void RenderController::CreateConstantBuffers()
 	Renderer::theContextPtr->DSSetConstantBuffers(miscBuffer.REGISTER_SLOT, 1, &neverChangeCBuffer.p);
 
 	// The camera cbuffer
-    bd.Usage = D3D11_USAGE_DYNAMIC;
-    bd.ByteWidth = sizeof(cbPerCamera);
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(cbPerCamera);
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	HR(Renderer::theDevicePtr->CreateBuffer(&bd, nullptr, &cameraCBuffer));
 
@@ -409,8 +380,7 @@ void RenderController::CreateConstantBuffers()
 	//Renderer::theContextPtr->GSSetConstantBuffers(cbPostProcess::REGISTER_SLOT, 1, &postShaderDataCBuffer.p);
 }
 
-void RenderController::CreateViewPorts(UINT viewPorts)
-{
+void RenderController::CreateViewPorts(UINT viewPorts) {
 	delete screenQuadMeshPtr;
 	screenQuadMeshPtr = RenderMesh::LoadXML("GDMesh/ScreenQuad/ScreenQuadShape.xml", "VERTEX_POSTEX");
 	screenQuad.Initialize(screenQuadMeshPtr, twoDContext.GetContent(), 0);
@@ -420,14 +390,11 @@ void RenderController::CreateViewPorts(UINT viewPorts)
 	InitializeDebugBuffers();
 
 	Float4x4 viewPortMat;
-	if(1 == viewPorts)
-	{
+	if ( 1 == viewPorts ) {
 		viewPortMat.makeIdentity();
 		ViewPortManager::GetReference().AddViewPort(screenQuadMeshPtr, twoDContext.GetContent(),
-			&sceneTarget,	viewPortMat);
-	}
-	else if(2 == viewPorts)
-	{
+			&sceneTarget, viewPortMat);
+	} else if ( 2 == viewPorts ) {
 		viewPortMat.makeScale(1.0f, .5f, 1.0f);
 		viewPortMat.translateGlobal(0.0f, 0.5f, 0.0f);
 		ViewPortManager::GetReference().AddViewPort(screenQuadMeshPtr, twoDContext.GetContent(),
@@ -436,9 +403,7 @@ void RenderController::CreateViewPorts(UINT viewPorts)
 		viewPortMat.translateGlobal(0.0f, -1.0f, 0.0f);
 		ViewPortManager::GetReference().AddViewPort(screenQuadMeshPtr, twoDContext.GetContent(),
 			&sceneTarget, viewPortMat);
-	}
-	else if(4 == viewPorts || 3 == viewPorts)
-	{
+	} else if ( 4 == viewPorts || 3 == viewPorts ) {
 		viewPortMat.makeScale(0.5f, .5f, 1.0f);
 		viewPortMat.translateGlobal(-.5f, 0.5f, 0.0f);
 		ViewPortManager::GetReference().AddViewPort(screenQuadMeshPtr, twoDContext.GetContent(),
@@ -458,23 +423,20 @@ void RenderController::CreateViewPorts(UINT viewPorts)
 	}
 }
 
-void RenderController::CreatePostProcessEffects()
-{
+void RenderController::CreatePostProcessEffects() {
 	PostProcessController::GetInstance()->InitializePostEffects(screenQuadMeshPtr);
 }
 
-float CalcGaussianBlurWeight(float x)
-{
+float CalcGaussianBlurWeight(float x) {
 	const float StandardDeviation = 1;
-	const float StandardDeviationSquared = 
+	const float StandardDeviationSquared =
 		StandardDeviation * StandardDeviation;
 
-	return (1.0f / sqrt(2 * (float)M_PI * StandardDeviationSquared)) * 
+	return (1.0f / sqrt(2 * (float)M_PI * StandardDeviationSquared)) *
 		pow(float(M_E), float(-((x * x) / (2 * StandardDeviationSquared))));
 }
 
-void RenderController::InitializeTextureSamplers()
-{
+void RenderController::InitializeTextureSamplers() {
 	CComPtr<ID3D11SamplerState> samplers[7];
 	D3D11_SAMPLER_DESC desc;
 	//anisoWrapSampler
@@ -545,8 +507,7 @@ void RenderController::InitializeTextureSamplers()
 	Renderer::theContextPtr->VSSetSamplers(1, 7, &samplers[0].p);
 }
 
-void RenderController::SetPerCameraShaderVariables()
-{
+void RenderController::SetPerCameraShaderVariables() {
 	ViewPortManager &vpm = ViewPortManager::GetReference();
 
 	XMVECTOR det;
@@ -558,7 +519,7 @@ void RenderController::SetPerCameraShaderVariables()
 	Float3 camDir = vpm.GetActiveViewForward();
 	camDir.normalize();
 	camBuffer.gCameraDir = XMFLOAT3(camDir.v);
-	
+
 	camBuffer.gFarDist = vpm.GetActiveViewFarClip();
 	//camBuffer.gNearDist = vpm.GetActiveViewNearClip();
 	float nearDist = vpm.GetActiveViewNearClip();
@@ -569,7 +530,7 @@ void RenderController::SetPerCameraShaderVariables()
 	XMStoreFloat4x4(&camBuffer.gInvViewProj, XMMatrixInverse(&det, XMLoadFloat4x4(&camBuffer.gViewProj)));
 
 	camBuffer.gPlaneX = -camBuffer.gFarDist / (camBuffer.gFarDist - nearDist);
-	camBuffer.gPlaneY = -camBuffer.gFarDist * nearDist / 
+	camBuffer.gPlaneY = -camBuffer.gFarDist * nearDist /
 		(camBuffer.gFarDist - nearDist);
 
 	D3D11_MAPPED_SUBRESOURCE edit;
@@ -584,8 +545,7 @@ void RenderController::SetPerCameraShaderVariables()
 	Renderer::theContextPtr->DSSetConstantBuffers(camBuffer.REGISTER_SLOT, 1, &cameraCBuffer.p);
 }
 
-void RenderController::PostRender()
-{
+void RenderController::PostRender() {
 	GraphicsProfiler::GetReference().BeginEvent(0, L"Renderin' post-processes started yo!");
 	gBufferRT.ActivateSRVs(GBufferStartSlot);
 
@@ -605,10 +565,10 @@ void RenderController::PostRender()
 	PostProcessController::GetReference().UpdatePostProcessCBuffer();
 
 	ViewPortManager::GetReference().RenderActiveViewPort();
-		
+
 	GraphicsProfiler::GetReference().BeginEvent(0, L"Sprite Batch Begin!");
 
-	spriteBatchPtr->Begin(SpriteSortMode_Deferred, 
+	spriteBatchPtr->Begin(SpriteSortMode_Deferred,
 		BlendStateManager::GetReference().GetState(BlendStateManager::BS_Alpha));
 
 	RenderSpriteManager::GetReference().Render(spriteBatchPtr);
@@ -628,19 +588,18 @@ void RenderController::PostRender()
 }
 
 void RenderController::RenderDirectionalDepths(EDRendererD3D::DirectionalLightWithShadow *lightPtr,
-	unsigned int index)
-{
+	unsigned int index) {
 	//assert(0);
 	dirLightPtr = lightPtr;
-	Renderer::theScreenViewport.Width    = static_cast<float>(theDirectionalShadowSize);
-	Renderer::theScreenViewport.Height   = static_cast<float>(theDirectionalShadowSize);
+	Renderer::theScreenViewport.Width = static_cast<float>(theDirectionalShadowSize);
+	Renderer::theScreenViewport.Height = static_cast<float>(theDirectionalShadowSize);
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 
 	static int test = 1;
 	RasterizerStateManager::RasterStates state = RasterizerStateManager::GetReference().GetCurrentState();
-	if(1 == test)
+	if ( 1 == test )
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_NOCULL);
-	if (2 == test)
+	if ( 2 == test )
 		RasterizerStateManager::GetReference().ApplyState(RasterizerStateManager::RS_CCW);
 	// Set the shadow map target and apply the light 
 	lightPtr->ActivateShadowTarget(index);
@@ -656,17 +615,16 @@ void RenderController::RenderDirectionalDepths(EDRendererD3D::DirectionalLightWi
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 }
 
-void RenderController::RenderPointDepths(PointLightWithShadow *lightPtr)
-{
-	Renderer::theScreenViewport.Width    = static_cast<float>(thePointShadowSize);
-	Renderer::theScreenViewport.Height   = static_cast<float>(thePointShadowSize);
+void RenderController::RenderPointDepths(PointLightWithShadow *lightPtr) {
+	Renderer::theScreenViewport.Width = static_cast<float>(thePointShadowSize);
+	Renderer::theScreenViewport.Height = static_cast<float>(thePointShadowSize);
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 
 	// Set the shadow map target and apply the light 
 	lightPtr->ActivateShadowTarget();
 	lightPtr->ClearShadowMap();
 	GraphicsProfiler::GetReference().BeginEvent(0, L"Render Point light shadow casters begin");
-	RenderShadowCasters(lightPtr, 
+	RenderShadowCasters(lightPtr,
 		static_cast<RenderContext::RenderStage>(RenderContext::RS_DEPTH_PNT_LIGHT));
 	GraphicsProfiler::GetReference().EndEvent();
 
@@ -675,10 +633,9 @@ void RenderController::RenderPointDepths(PointLightWithShadow *lightPtr)
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 }
 
-void RenderController::RenderSpotDepths(SpotLightWithShadow *lightPtr)
-{
-	Renderer::theScreenViewport.Width    = static_cast<float>(theSpotShadowSize);
-	Renderer::theScreenViewport.Height   = static_cast<float>(theSpotShadowSize);
+void RenderController::RenderSpotDepths(SpotLightWithShadow *lightPtr) {
+	Renderer::theScreenViewport.Width = static_cast<float>(theSpotShadowSize);
+	Renderer::theScreenViewport.Height = static_cast<float>(theSpotShadowSize);
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 
 	// Set the shadow map target and apply the light 
@@ -693,68 +650,58 @@ void RenderController::RenderSpotDepths(SpotLightWithShadow *lightPtr)
 	Renderer::theContextPtr->RSSetViewports(1, &Renderer::theScreenViewport);
 }
 
-void RenderController::RenderCameraDepths()
-{
-	for(list<RenderContext *>::iterator iter = 
-		depthCameraContexts.begin(); iter != depthCameraContexts.end(); ++iter)
-	{
-		(*iter)->SetRenderStage( RenderContext::RS_DEPTH_CAMERA );
+void RenderController::RenderCameraDepths() {
+	for ( list<RenderContext *>::iterator iter =
+		depthCameraContexts.begin(); iter != depthCameraContexts.end(); ++iter ) {
+		(*iter)->SetRenderStage(RenderContext::RS_DEPTH_CAMERA);
 		(*iter)->RenderProcess();
 	}
 }
 
-void RenderController::RenderShadowCasters(ILight *lightPtr, RenderContext::RenderStage stage)
-{
-	DepthStencilStateManager::DSStates prevDSState = 
+void RenderController::RenderShadowCasters(ILight *lightPtr, RenderContext::RenderStage stage) {
+	DepthStencilStateManager::DSStates prevDSState =
 		DepthStencilStateManager::GetReference().GetCurrentState();
 	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_Default);
 
 	BlendStateManager::BStates prevBSState = BlendStateManager::GetReference().GetCurrentState();
 	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 
-	RasterizerStateManager::RasterStates prevRSState = 
+	RasterizerStateManager::RasterStates prevRSState =
 		RasterizerStateManager::GetReference().GetCurrentState();
 
 	// Render static objects
-	for (list<RenderContext * >::iterator iter =
-		shadowCasters.begin(); iter != shadowCasters.end(); ++iter)
-	{
+	for ( list<RenderContext * >::iterator iter =
+		shadowCasters.begin(); iter != shadowCasters.end(); ++iter ) {
 		(*iter)->SetRenderStage(stage);
 		(*iter)->RenderProcess();
 	}
-	
+
 	DepthStencilStateManager::GetReference().ApplyState(prevDSState);
 	BlendStateManager::GetReference().ApplyState(prevBSState);
 	RasterizerStateManager::GetReference().ApplyState(prevRSState);
 }
 
-void RenderController::InitializeAVisibilityQuery(VisibilityQueryInterface &query)
-{
-//	query.Initialize(&visibilityTestTarget, m_pDSGBuffers);
+void RenderController::InitializeAVisibilityQuery(VisibilityQueryInterface &query) {
+	//	query.Initialize(&visibilityTestTarget, m_pDSGBuffers);
 }
 
-void RenderController::AddVisiblePointLightShadowed(PointLightSource *light)
-{
+void RenderController::AddVisiblePointLightShadowed(PointLightSource *light) {
 	visiblePointLightsWithShadow.insert(light);
 }
 
-void RenderController::AddVisiblePointLight(PointLightSource *light)
-{
+void RenderController::AddVisiblePointLight(PointLightSource *light) {
 	visiblePointLights.insert(light);
 }
 
-void RenderController::AddVisibleLight(SpotLightWithShadow *light)
-{
+void RenderController::AddVisibleLight(SpotLightWithShadow *light) {
 	visibleSpotLightsWithShadow.insert(light);
 }
 
-void RenderController::AddVisibleLight(SpotLight *light)
-{
+void RenderController::AddVisibleLight(SpotLight *light) {
 	visibleSpotLights.insert(light);
 }
 
-void RenderController::UpdateMiscShaderData()
-{
+void RenderController::UpdateMiscShaderData() {
 	D3D11_MAPPED_SUBRESOURCE edit;
 	Renderer::theContextPtr->Map(neverChangeCBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &edit);
 	memcpy(edit.pData, &miscBuffer, sizeof(miscBuffer));
@@ -767,27 +714,26 @@ void RenderController::UpdateMiscShaderData()
 	Renderer::theContextPtr->DSSetConstantBuffers(miscBuffer.REGISTER_SLOT, 1, &neverChangeCBuffer.p);
 }
 
-void RenderController::ClearRenderSets(void)
-{
+void RenderController::ClearRenderSets(void) {
 	// Clear render sets
 	list<RenderContext *>::iterator contextIter;
 
-	for( contextIter = shadowCasters.begin(); contextIter != shadowCasters.end(); ++contextIter )
+	for ( contextIter = shadowCasters.begin(); contextIter != shadowCasters.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	for( contextIter = gBufferContexts.begin(); contextIter != gBufferContexts.end(); ++contextIter )
+	for ( contextIter = gBufferContexts.begin(); contextIter != gBufferContexts.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	for( contextIter = depthCameraContexts.begin(); contextIter != depthCameraContexts.end(); ++contextIter )
+	for ( contextIter = depthCameraContexts.begin(); contextIter != depthCameraContexts.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	for( contextIter = unlitOpaqueContexts.begin(); contextIter != unlitOpaqueContexts.end(); ++contextIter )
-		(*contextIter)->ClearRenderSet();
-	
-	for( contextIter = guiContexts.begin(); contextIter != guiContexts.end(); ++contextIter )
+	for ( contextIter = unlitOpaqueContexts.begin(); contextIter != unlitOpaqueContexts.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	if( transparentContextPtr != 0 )
+	for ( contextIter = guiContexts.begin(); contextIter != guiContexts.end(); ++contextIter )
+		(*contextIter)->ClearRenderSet();
+
+	if ( transparentContextPtr != 0 )
 		transparentContextPtr->ClearRenderSet();
 
 	visiblePointLightsWithShadow.clear();
@@ -797,18 +743,17 @@ void RenderController::ClearRenderSets(void)
 
 }
 
-void RenderController::ClearLightRenderSets(void)
-{
-		// Clear render sets
+void RenderController::ClearLightRenderSets(void) {
+	// Clear render sets
 	list<RenderContext *>::iterator contextIter;
 
-	for( contextIter = shadowCasters.begin(); contextIter != shadowCasters.end(); ++contextIter )
+	for ( contextIter = shadowCasters.begin(); contextIter != shadowCasters.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	for( contextIter = gBufferContexts.begin(); contextIter != gBufferContexts.end(); ++contextIter )
+	for ( contextIter = gBufferContexts.begin(); contextIter != gBufferContexts.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
-	for( contextIter = depthCameraContexts.begin(); contextIter != depthCameraContexts.end(); ++contextIter )
+	for ( contextIter = depthCameraContexts.begin(); contextIter != depthCameraContexts.end(); ++contextIter )
 		(*contextIter)->ClearRenderSet();
 
 	visiblePointLightsWithShadow.clear();
@@ -817,36 +762,96 @@ void RenderController::ClearLightRenderSets(void)
 	Renderer::IncrementRenderCounter();
 }
 
-void RenderController::RenderPointLight(PointLightSource *lightSourcePtr)
-{
+void RenderController::RenderPointLight(PointLightSource *lightSourcePtr) {
 	// Implement a solution for the Deferred Renderer Lab
-	RenderPointLightSolution(lightSourcePtr);
+	//RenderPointLightSolution(lightSourcePtr);
+
+	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_NoDepth);
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Additive);
+	gBufferRT.ActivateSRVs(GBufferStartSlot);
+	if ( lightSourcePtr->GetShadows() == EDGameCore::ILight::SOFT ) {
+		PointLight *pointLight = lightSourcePtr->GetLightPtr();
+		PointLightWithShadow *pointLightWithShadow = (PointLightWithShadow*)pointLight;
+		RenderPointDepths(pointLightWithShadow);
+		sceneTarget.ActivateTarget();
+		sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
+		pointLightWithShadow->ActivateShadowTexture();
+		pointLightWithShadowsContextHandle.GetContent()->RenderProcess();
+		pointLightWithShadow->RevertShadowTexture();
+		pointLightWithShadowsContextHandle.GetContent()->ClearRenderSet();
+
+	} else {
+		PointLight *pointLight = lightSourcePtr->GetLightPtr();
+		pointLight->ApplyLight();
+		sceneTarget.ActivateTarget();
+		sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
+		pointLightContextHandle.GetContent()->RenderProcess();
+		pointLightContextHandle.GetContent()->ClearRenderSet();
+	}
+
+	gBufferRT.DeactivateSRVs(GBufferStartSlot);
 }
 
-void RenderController::RenderSpotLight(SpotLightSource *lightSourcePtr)
-{
+void RenderController::RenderSpotLight(SpotLightSource *lightSourcePtr) {
 	// Implement a solution for the Deferred Renderer Lab
-	RenderSpotLightSolution(lightSourcePtr);
+	//RenderSpotLightSolution(lightSourcePtr);
+
+	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_NoDepth);
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Additive);
+	gBufferRT.ActivateSRVs(GBufferStartSlot);
+	if ( lightSourcePtr->GetShadows() == EDGameCore::ILight::SOFT ) {
+		SpotLight *SpotLight = lightSourcePtr->GetLightPtr();
+		SpotLightWithShadow *spotLightWithShadow = (SpotLightWithShadow*)SpotLight;
+		RenderSpotDepths(spotLightWithShadow);
+		sceneTarget.ActivateTarget();
+		sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
+		spotLightWithShadow->ActivateShadowTexture();
+		spotLightWithShadowsContextHandle.GetContent()->RenderProcess();
+		spotLightWithShadow->RevertShadowTexture();
+		spotLightWithShadowsContextHandle.GetContent()->ClearRenderSet();
+
+	} else {
+		SpotLight *spotLight = lightSourcePtr->GetLightPtr();
+		spotLight->ApplyLight();
+		sceneTarget.ActivateTarget();
+		sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
+		spotLightContextHandle.GetContent()->RenderProcess();
+		spotLightContextHandle.GetContent()->ClearRenderSet();
+	}
+
 }
 
 
-void RenderController::RenderDirectionalLight(DirectionalLightSource *lightSourcePtr,
-	EDGameCore::Camera *camPtr)
-{
+void RenderController::RenderDirectionalLight(DirectionalLightSource *lightSourcePtr, EDGameCore::Camera *camPtr) {
 	// Fancy cascade solution
-	return RenderDirectionalLightSolution(lightSourcePtr, &camPtr->GetShadowFrustumAabb(0), camPtr->GetNumCascades());
-	
-	const Aabb &aabb = camPtr[0].GetShadowFrustumAabb(0);
+	//return RenderDirectionalLightSolution(lightSourcePtr, &camPtr->GetShadowFrustumAabb(0), camPtr->GetNumCascades());
+	//const Aabb &aabb = camPtr[0].GetShadowFrustumAabb(0);
 	DirectionalLightWithShadow *lightPtr =
 		static_cast<DirectionalLightWithShadow *>(lightSourcePtr->GetLightPtr());
 
 	// Simpler single map solution
-	return RenderDirectionalLightNoCascadeSolution(lightPtr, aabb);
+	//return RenderDirectionalLightNoCascadeSolution(lightPtr, aabb);
+
+	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_NoDepth);
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Additive);
+	gBufferRT.ActivateSRVs(GBufferStartSlot);
+	DirectionalLightWithShadow *dirLight = lightSourcePtr->GetLightPtr();
+	//BuildDirViewProjectionCascade(aabb, dirLight, 0);
+	//RenderDirectionalDepths(dirLight, 0);
+	for ( UINT i = 0; i < camPtr->GetNumCascades(); i++ ) {
+		BuildDirViewProjectionCascade(camPtr->GetShadowFrustumAabb(i), dirLight, i);
+		RenderDirectionalDepths(dirLight, i);
+	}
+	sceneTarget.ActivateTarget();
+	sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
+	dirLight->ActivateShadowTexture();
+	directionDeferredContextHandle.GetContent()->RenderProcess();
+	dirLight->RevertShadowTexture();
+	directionDeferredContextHandle.GetContent()->ClearRenderSet();
 }
 
 void RenderController::BuildDirViewProjectionCascade(const EDMath::Aabb &aabb,
-	EDRendererD3D::DirectionalLightWithShadow *lightPtr, unsigned int index)
-{
+	EDRendererD3D::DirectionalLightWithShadow *lightPtr, unsigned int index) {
 	BuildDirShadowProjectionSolution(aabb);
 
 	BuildDirShadowViewProjectionSolution(aabb, lightPtr, index);
@@ -854,33 +859,56 @@ void RenderController::BuildDirViewProjectionCascade(const EDMath::Aabb &aabb,
 	BuildDirShadowShimmerFixSolution(index);
 }
 
-void RenderController::RenderGBuffers()
-{
+void RenderController::RenderGBuffers() {
 	// Set camera constant buffer before rendering geometry
 	RenderController::GetInstance()->SetPerCameraShaderVariables();
 
 	// Implement a solution for the Deferred Renderer Lab
-	RenderGBuffersSolution();
-
-	// Clear our main target before we start rendering lights
+	//RenderGBuffersSolution();
 	const FLOAT clearColor[4] = { 0, 0, 0, 1 };
+
+	gBufferRT.ActivateTarget();
+	gBufferRT.ClearRenderTargetView(clearColor);
+	gBufferRT.ClearDepthStencilView(D3D11_CLEAR_DEPTH);
+	
+	for ( auto it = gBufferContexts.begin(); it != gBufferContexts.end(); it++ ) {
+		(*it)->SetRenderStage(RenderContext::RS_GBUFFER);
+		(*it)->RenderProcess();
+	}
+	
+	// Clear our main target before we start rendering lights
 	sceneTarget.ActivateTarget();
 	sceneTarget.ClearRenderTargetView(clearColor);
 	sceneTarget.ClearDepthStencilView(D3D11_CLEAR_STENCIL);
 }
 
-void RenderController::RenderUnlitObjects()
-{
-	RenderUnlitObjectsSolution();
+void RenderController::RenderUnlitObjects() {
+	//RenderUnlitObjectsSolution();
+	gBufferRT.DeactivateSRVs(GBufferStartSlot);
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
+	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_LessEqual);
+
+	for ( auto it = unlitOpaqueContexts.begin(); it != unlitOpaqueContexts.end(); it++ ) {
+		(*it)->SetRenderStage(RenderContext::RS_UNLIT);
+		(*it)->RenderProcess();
+		(*it)->ClearRenderSet();
+	}
+
+	DepthStencilStateManager::GetReference().ApplyState(DepthStencilStateManager::DSS_Default);
 }
 
-void RenderController::RenderTransparentObjects()
-{
-	RenderTransparentObjectsSolution();
+void RenderController::RenderTransparentObjects() {
+	//RenderTransparentObjectsSolution();
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Alpha);
+	transSceneTarget.ActivateTarget();
+	transparentContextPtr->SetRenderStage(RenderContext::RS_TRANSPARENT);
+	transparentContextPtr->RenderProcess();
+	sceneTarget.ActivateTarget();
+
+	BlendStateManager::GetReference().ApplyState(BlendStateManager::BS_Default);
 }
 
-void RenderController::RenderDebugPrimitives()
-{
+void RenderController::RenderDebugPrimitives() {
 	debugLines.GetContent()->RenderProcess();
 	debugTriangles.GetContent()->RenderProcess();
 }

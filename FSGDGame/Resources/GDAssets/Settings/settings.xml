@@ -33,6 +33,6 @@
   <!--Post processing effects-->
   <EnableFog>false</EnableFog>
   <EnableDepthOfField>false</EnableDepthOfField>
-  <EnableFXAA>false</EnableFXAA>
+  <EnableFXAA>true</EnableFXAA>
   
 </Settings>
